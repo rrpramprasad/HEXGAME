@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="https://unpkg.com/konva@4.2.0/konva.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script
+      type="text/javascript"
+      type="text/javascript"
+      src="pathfinding-browser.min.js"
+    ></script>
+    <title>Hex Game</title>
+    <style>
+      #container {
+        position: absolute;
+        top: 50px;
+        left: 100px;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status"></div>
+    <!-- this shows which player clicked and on which hex -->
+    <div id="container"></div>
+    <!-- this container is used as canvas controllesd using konva.js library -->
+
+    <script>
+      var ymatrix = [
+        [0, 1, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 0]
+      ];
+
+      var rmatrix = [
+        [0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0]
+      ];
+      var ygrid = new PF.Grid(ymatrix);
+
+      var rgrid = new PF.Grid(rmatrix);
+      var width = window.innerWidth;
+      // browser width
+      var height = window.innerHeight;
+      // browser height
+      var stage = new Konva.Stage({
+        // we transform id= container div to canvas using stage method from Konva library
+        container: "container",
+        width: width,
+        height: height
+      });
+
+      var layer = new Konva.Layer();
+      var colorCount = 0;
+      // colorcount to check which player is clicking
+      // odd for yellow, and even for red
+      // this foor loop is 1 3 5 hexagon row
+      var boardSize = 6;
+      for (var j = 0; j < boardSize / 2; j++) {
+        for (var i = 0; i < boardSize; i++) {
+          var box = new Konva.RegularPolygon({
+            indi: (j + j + 1) * boardSize + i + 1 - boardSize,
+            s: i + 1 - 1,
+            j: 2 * j + 1 - 1,
+            x: i * 60 + 50,
+            y: j * 120 + 50,
+            sides: 6,
+            radius: 35,
+            draggable: false,
+            fill: "#00D2FF",
+            stroke: "black",
+            strokeWidth: 6.5
+          });
+          // change color of hex when click event detected
+          box.on("click", function() {
+            // monitor the color count
+            //latest code
+            var fill = this.fill();
+
+            if (
+              0 == colorCount % 2 &&
+              this.fill() == "#00D2FF" &&
+              this.fill() != "red"
+            ) {
+              fill = "yellow";
+              colorCount++;
+            } else if (
+              0 != colorCount % 2 &&
+              this.fill() == "#00D2FF" &&
+              this.fill() != "yellow"
+            ) {
+              fill = "red";
+              colorCount++;
+            }
+            this.fill(fill);
+            layer.draw();
+          });
+
+          box.on("mouseover", function() {
+            document.body.style.cursor = "pointer";
+          });
+          box.on("mouseout", function() {
+            document.body.style.cursor = "default";
+          });
+
+          layer.add(box);
+        }
+      }
+      // this foor loop is 2 4 6 hexagon
+      for (var j = 0; j < boardSize / 2; j++) {
+        for (var i = 0; i < boardSize; i++) {
+          var box = new Konva.RegularPolygon({
+            indi: (j + j + 1) * boardSize + i + 1,
+            s: i + 1 - 1 + 1,
+            j: (j + 1) * 2 - 1,
+            x: i * 60 + 80,
+            y: j * 120 + 110,
+            sides: 6,
+            radius: 35,
+            draggable: false,
+            fill: "#00D2FF",
+            stroke: "black",
+            strokeWidth: 6.5
+          });
+
+          box.on("click", function() {
+            var fill = this.fill();
+            // *****************************
+            // if (0 == colorCount % 2  && fill == "#00D2FF")
+            var fill = this.fill();
+
+            if (
+              0 == colorCount % 2 &&
+              this.fill() == "#00D2FF" &&
+              this.fill() != "red"
+            ) {
+              fill = "yellow";
+              colorCount++;
+            } else if (
+              0 != colorCount % 2 &&
+              this.fill() == "#00D2FF" &&
+              this.fill() != "yellow"
+            ) {
+              fill = "red";
+              colorCount++;
+            }
+            this.fill(fill);
+
+            layer.draw();
+          });
+
+          box.on("mouseover", function() {
+            document.body.style.cursor = "pointer";
+          });
+          box.on("mouseout", function() {
+            document.body.style.cursor = "default";
+          });
+
+          layer.add(box);
+        }
+      }
+      // add the layer to the stage
+      stage.add(layer);
+
+      stage.on("click", function(e) {
+        // e.target is a clicked Konva.Shape or current stage if you clicked on empty space
+
+        // 1 (1,0) ,(2,0)2, 3, 4, 5, 6 red
+        // 7, 13, 19, 25, 31 yellow
+        // 31, 32, 33, 34, 35, 36 yellow
+        // 6, 12, 18, 24, 30, 31 red
+
+        // calculating adjacent if index is lessthan 18 (boardSize/boardSize/2) ( i +5 or 1 +6)
+        // calculating adjacent if index is greater than 17 (boardSize/boardSize/2) ( i +5 or 1 +6)
+        // var grid = new PF.Grid(6, 6);
+        // grid.setWalkableAt(0, 1, false);
+        // move in x, y count including 0
+        // if you want to check diagnoally elements above must also be 0 if top to botto check
+        // problem due to movng hex right?
+        // problem of 6 x 6 due to moving write
+        // var matrix = [
+        //   [1, 0, 1, 1, 1, 1, 1],
+        //   [1, 1, 0, 1, 1, 1, 1],
+        //   [1, 0, 1, 1, 1, 1, 1],
+        //   [1, 0, 1, 1, 1, 1, 1],
+        //   [1, 0, 1, 1, 1, 1, 1],
+        //   [1, 0, 1, 1, 1, 1, 1],
+        //   [1, 0, 1, 1, 1, 1, 1]
+        // ];
+
+        // var grid = new PF.Grid(matrix);
+
+        // var finder = new PF.AStarFinder({
+        //   diagonalMovement: PF.DiagonalMovement.Always
+        // });
+
+        // var path = finder.findPath(1, 0, 1, 5, grid);
+        // $("#status").html(
+        //   hexIndex +
+        //     " " +
+        //     hexii +
+        //     " " +
+        //     hexJ +
+        //     " clicked on " +
+        //     path +
+        //     " " +
+        //     hexI +
+        //     " clicked by player " +
+        //     hexColor
+        // );
+
+        var hexIndex = e.target["index"];
+        var hexii = e.target.attrs["s"];
+        var hexJ = e.target.attrs["j"];
+        var hexColor = e.target.attrs["fill"];
+        var hexI = e.target.attrs["indi"];
+
+        var finder = new PF.AStarFinder({
+          diagonalMovement: PF.DiagonalMovement.Always
+        });
+
+        var directions = myFunction(hexii, hexJ, ygrid, rgrid, hexColor);
+
+        function myFunction(x, y, ygrid, rgrid, hexColor) {
+          if (hexColor == "yellow") {
+            // for loop needed for yellow path horizontally
+
+            // 7, 13, 19, 25, 31 yellow
+            // 31, 32, 33, 34, 35, 36 yellow
+
+            ygrid.setWalkableAt(x, y, true);
+            path = finder.findPath(0, 0, 6, 0, ygrid);
+          } else if (hexColor == "red") {
+            // for loop to check red path vertically
+            // 1 (1,0) ,(2,0)2, 3, 4, 5, 6 red
+            // 6, 12, 18, 24, 30, 31 red
+            rgrid.setWalkableAt(x, y, true);
+            path = finder.findPath(1, 0, 0, 6, rgrid);
+          }
+          return path;
+        }
+
+        $("#status").html(
+          "hex number " +
+            hexIndex +
+            " hex x value " +
+            hexii +
+            " hex y value " +
+            hexJ +
+            " player color " +
+            hexColor
+        );
+        console.log(rgrid.nodes);
+        console.log(ygrid.nodes);
+        console.log(directions);
+      });
+    </script>
+  </body>
+</html>
